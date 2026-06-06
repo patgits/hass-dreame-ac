@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Dreame AC",
+        "description": "Melde dich mit deinem Dreame-Konto an (E-Mail + Passwort). Die Klimaanlage wird automatisch erkannt.",
+        "data": {
+          "username": "E-Mail",
+          "password": "Passwort",
+          "region": "Server-Region"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Anmeldung fehlgeschlagen — E-Mail oder Passwort falsch.",
+      "cannot_connect": "Keine Verbindung zur Dreame-Cloud.",
+      "no_aircon": "Im Konto wurde keine Klimaanlage gefunden."
+    },
+    "abort": {
+      "already_configured": "Diese Klimaanlage ist bereits eingerichtet."
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Dreame AC",
+        "description": "Sign in with your Dreame account (e-mail + password). The air conditioner is detected automatically.",
+        "data": {
+          "username": "E-mail",
+          "password": "Password",
+          "region": "Server region"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Login failed — wrong e-mail or password.",
+      "cannot_connect": "Could not reach the Dreame cloud.",
+      "no_aircon": "No air conditioner found in the account."
+    },
+    "abort": {
+      "already_configured": "This air conditioner is already configured."
+    }
+  }
+}
