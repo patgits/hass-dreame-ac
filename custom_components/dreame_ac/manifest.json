@@ -1,12 +1,13 @@
 {
   "domain": "dreame_ac",
   "name": "Dreame AC",
-  "version": "0.2.0",
-  "documentation": "https://github.com/patgits/hass-dreame-ac",
-  "issue_tracker": "https://github.com/patgits/hass-dreame-ac/issues",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": ["@patgits"],
   "config_flow": true,
-  "iot_class": "cloud_polling"
+  "dependencies": [],
+  "documentation": "https://github.com/patgits/hass-dreame-ac",
+  "integration_type": "device",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/patgits/hass-dreame-ac/issues",
+  "requirements": [],
+  "version": "0.2.0"
 }
