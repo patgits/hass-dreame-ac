@@ -1,6 +1,8 @@
 """Config flow for Dreame AC."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
@@ -22,9 +24,13 @@ from .const import (
 
 
 class DreameACConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Email + password login, then auto-select the air-conditioner."""
+    """Email + password login, then pick the air-conditioner."""
 
     VERSION = 1
+
+    def __init__(self) -> None:
+        self._creds: dict[str, str] = {}
+        self._acs: list[dict[str, Any]] = []
 
     async def async_step_user(self, user_input=None) -> FlowResult:
         errors: dict[str, str] = {}
@@ -45,24 +51,18 @@ class DreameACConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # noqa: BLE001
                 errors["base"] = "cannot_connect"
             else:
-                acs = [d for d in devices if "aircon" in (d.get("model") or "")]
-                if not acs:
+                self._acs = [d for d in devices if "aircon" in (d.get("model") or "")]
+                if not self._acs:
                     errors["base"] = "no_aircon"
                 else:
-                    dev = acs[0]
-                    await self.async_set_unique_id(str(dev["did"]))
-                    self._abort_if_unique_id_configured()
-                    return self.async_create_entry(
-                        title=dev.get("customName") or "Dreame AC",
-                        data={
-                            CONF_USERNAME: user_input[CONF_USERNAME],
-                            CONF_PASSWORD: user_input[CONF_PASSWORD],
-                            CONF_REGION: user_input[CONF_REGION],
-                            CONF_HOST_PREFIX: DEFAULT_HOST_PREFIX,
-                            CONF_DID: str(dev["did"]),
-                            CONF_MODEL: dev.get("model"),
-                        },
-                    )
+                    self._creds = {
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        CONF_REGION: user_input[CONF_REGION],
+                    }
+                    if len(self._acs) == 1:
+                        return await self._create_for(self._acs[0])
+                    return await self.async_step_select()
 
         return self.async_show_form(
             step_id="user",
@@ -74,4 +74,33 @@ class DreameACConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+        )
+
+    async def async_step_select(self, user_input=None) -> FlowResult:
+        """Let the user pick one of several air conditioners on the account."""
+        if user_input is not None:
+            did = user_input[CONF_DID]
+            dev = next(d for d in self._acs if str(d["did"]) == did)
+            return await self._create_for(dev)
+
+        choices = {
+            str(d["did"]): (d.get("customName") or d.get("model") or str(d["did"]))
+            for d in self._acs
+        }
+        return self.async_show_form(
+            step_id="select",
+            data_schema=vol.Schema({vol.Required(CONF_DID): vol.In(choices)}),
+        )
+
+    async def _create_for(self, dev: dict[str, Any]) -> FlowResult:
+        await self.async_set_unique_id(str(dev["did"]))
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(
+            title=dev.get("customName") or "Dreame AC",
+            data={
+                **self._creds,
+                CONF_HOST_PREFIX: DEFAULT_HOST_PREFIX,
+                CONF_DID: str(dev["did"]),
+                CONF_MODEL: dev.get("model"),
+            },
         )

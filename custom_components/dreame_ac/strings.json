@@ -3,11 +3,18 @@
     "step": {
       "user": {
         "title": "Dreame AC",
-        "description": "Melde dich mit deinem Dreame-Konto an (E-Mail + Passwort). Die Klimaanlage wird automatisch erkannt.",
+        "description": "Melde dich mit deinem vollwertigen Dreame-Konto an (E-Mail + Passwort). Logins über „Sign in with Apple/Google“ werden nicht unterstützt — du brauchst ein in der Dreame-App gesetztes Passwort.",
         "data": {
           "username": "E-Mail",
           "password": "Passwort",
           "region": "Server-Region"
+        }
+      },
+      "select": {
+        "title": "Klimaanlage auswählen",
+        "description": "Im Konto wurden mehrere Klimaanlagen gefunden. Wähle die einzurichtende aus.",
+        "data": {
+          "did": "Klimaanlage"
         }
       }
     },

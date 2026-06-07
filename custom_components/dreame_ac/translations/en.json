@@ -3,11 +3,18 @@
     "step": {
       "user": {
         "title": "Dreame AC",
-        "description": "Sign in with your Dreame account (e-mail + password). The air conditioner is detected automatically.",
+        "description": "Sign in with your full Dreame account (e-mail + password). \"Sign in with Apple/Google\" logins are not supported — you need a password set in the Dreame app.",
         "data": {
           "username": "E-mail",
           "password": "Password",
           "region": "Server region"
+        }
+      },
+      "select": {
+        "title": "Select air conditioner",
+        "description": "Several air conditioners were found on the account. Choose the one to set up.",
+        "data": {
+          "did": "Air conditioner"
         }
       }
     },
