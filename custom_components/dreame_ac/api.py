@@ -179,11 +179,6 @@ class DreameCloud:
         params = [{"did": did, "siid": s, "piid": p} for s, p in props]
         data = await self._send_command(did, "get_properties", params)
 
-        # Log the raw shape once so the exact response format is confirmable.
-        if not getattr(self, "_logged_raw", False):
-            self._logged_raw = True
-            _LOGGER.debug("Dreame get_properties RAW (%s): %r", type(data).__name__, data)
-
         # The cloud sometimes double-encodes the MIoT result as a JSON string,
         # or wraps the list inside a dict. Normalise to a list of dicts.
         if isinstance(data, str):

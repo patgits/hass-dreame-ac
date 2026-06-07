@@ -44,6 +44,9 @@ CONF_MODEL = "model"
 #   4.2  swing/oscillate bool
 #   10.1 current temp    int, °C * 10  (read-only)
 # Fan SPEED is NOT exposed over the cloud RPC — device limitation.
+#   Verified empirically: across Low/High (via app AND remote) siid 2.4 stays
+#   constant at 2 and siid 8.1 stays constant at 0; no property tracks the
+#   fan-speed change, so it cannot be read or set over the cloud.
 # ---------------------------------------------------------------------------
 PROP_POWER = (2, 1)
 PROP_MODE = (2, 2)
