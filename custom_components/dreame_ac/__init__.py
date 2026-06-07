@@ -17,7 +17,7 @@ from .const import (
 )
 from .coordinator import DreameACCoordinator
 
-PLATFORMS = ["climate"]
+PLATFORMS = ["climate", "switch"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

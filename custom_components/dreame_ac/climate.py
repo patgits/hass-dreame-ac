@@ -1,4 +1,4 @@
-"""Climate platform for Dreame AC."""
+"""Climate platform for Dreame AC (dreame.aircon.tbl2528)."""
 from __future__ import annotations
 
 from homeassistant.components.climate import (
@@ -15,19 +15,19 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     CONF_MODEL,
     DOMAIN,
-    FAN_TO_HA,
+    MAX_TEMP,
+    MIN_TEMP,
     MODE_TO_HVAC,
     PROP_CURRENT_TEMP,
-    PROP_FAN_LEVEL,
     PROP_MODE,
     PROP_POWER,
     PROP_SWING,
     PROP_TARGET_TEMP,
+    TEMP_SCALE,
 )
 from .coordinator import DreameACCoordinator
 
 _HVAC_TO_MODE = {v: k for k, v in MODE_TO_HVAC.items()}
-_HA_TO_FAN = {v: k for k, v in FAN_TO_HA.items()}
 
 
 async def async_setup_entry(
@@ -38,27 +38,18 @@ async def async_setup_entry(
 
 
 class DreameACClimate(CoordinatorEntity[DreameACCoordinator], ClimateEntity):
-    """A Dreame air conditioner exposed as an HA climate entity."""
+    """Dreame portable air conditioner (cooling/dry/fan, no heat)."""
 
     _attr_has_entity_name = True
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 1
-    _attr_min_temp = 16
-    _attr_max_temp = 30
-    _attr_hvac_modes = [
-        HVACMode.OFF,
-        HVACMode.COOL,
-        HVACMode.HEAT,
-        HVACMode.AUTO,
-        HVACMode.DRY,
-        HVACMode.FAN_ONLY,
-    ]
-    _attr_fan_modes = ["auto", "low", "medium", "high"]
+    _attr_min_temp = MIN_TEMP
+    _attr_max_temp = MAX_TEMP
+    _attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.DRY, HVACMode.FAN_ONLY]
     _attr_swing_modes = ["off", "on"]
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.SWING_MODE
         | ClimateEntityFeature.TURN_ON
         | ClimateEntityFeature.TURN_OFF
@@ -66,13 +57,12 @@ class DreameACClimate(CoordinatorEntity[DreameACCoordinator], ClimateEntity):
 
     def __init__(self, coordinator: DreameACCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator)
-        self._entry = entry
         self._attr_unique_id = entry.unique_id
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.unique_id)},
             "name": entry.title,
             "manufacturer": "Dreame",
-            "model": entry.data.get(CONF_MODEL, "dreame.aircon"),
+            "model": entry.data.get(CONF_MODEL, "dreame.aircon.tbl2528"),
         }
 
     def _val(self, prop):
@@ -82,19 +72,17 @@ class DreameACClimate(CoordinatorEntity[DreameACCoordinator], ClimateEntity):
     def hvac_mode(self) -> HVACMode:
         if not self._val(PROP_POWER):
             return HVACMode.OFF
-        return HVACMode(MODE_TO_HVAC.get(self._val(PROP_MODE), "auto"))
+        return HVACMode(MODE_TO_HVAC.get(self._val(PROP_MODE), "cool"))
 
     @property
     def current_temperature(self):
-        return self._val(PROP_CURRENT_TEMP)
+        raw = self._val(PROP_CURRENT_TEMP)
+        return raw / TEMP_SCALE if raw is not None else None
 
     @property
     def target_temperature(self):
-        return self._val(PROP_TARGET_TEMP)
-
-    @property
-    def fan_mode(self):
-        return FAN_TO_HA.get(self._val(PROP_FAN_LEVEL), "auto")
+        raw = self._val(PROP_TARGET_TEMP)
+        return raw / TEMP_SCALE if raw is not None else None
 
     @property
     def swing_mode(self):
@@ -112,7 +100,8 @@ class DreameACClimate(CoordinatorEntity[DreameACCoordinator], ClimateEntity):
             return
         if not self._val(PROP_POWER):
             await self._set(PROP_POWER, True)
-        await self._set(PROP_MODE, _HVAC_TO_MODE[hvac_mode.value])
+        if hvac_mode.value in _HVAC_TO_MODE:
+            await self._set(PROP_MODE, _HVAC_TO_MODE[hvac_mode.value])
 
     async def async_turn_on(self) -> None:
         await self._set(PROP_POWER, True)
@@ -123,10 +112,7 @@ class DreameACClimate(CoordinatorEntity[DreameACCoordinator], ClimateEntity):
     async def async_set_temperature(self, **kwargs) -> None:
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
-            await self._set(PROP_TARGET_TEMP, int(temp))
-
-    async def async_set_fan_mode(self, fan_mode: str) -> None:
-        await self._set(PROP_FAN_LEVEL, _HA_TO_FAN[fan_mode])
+            await self._set(PROP_TARGET_TEMP, int(round(temp * TEMP_SCALE)))
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         await self._set(PROP_SWING, swing_mode == "on")

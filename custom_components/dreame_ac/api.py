@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import logging
 import time
 from typing import Any
@@ -177,10 +178,34 @@ class DreameCloud:
     ) -> dict[tuple[int, int], Any]:
         params = [{"did": did, "siid": s, "piid": p} for s, p in props]
         data = await self._send_command(did, "get_properties", params)
+
+        # Log the raw shape once so the exact response format is confirmable.
+        if not getattr(self, "_logged_raw", False):
+            self._logged_raw = True
+            _LOGGER.debug("Dreame get_properties RAW (%s): %r", type(data).__name__, data)
+
+        # The cloud sometimes double-encodes the MIoT result as a JSON string,
+        # or wraps the list inside a dict. Normalise to a list of dicts.
+        if isinstance(data, str):
+            try:
+                data = json.loads(data)
+            except (ValueError, TypeError):
+                return {}
+        if isinstance(data, dict):
+            for key in ("result", "properties", "params", "list", "data"):
+                if isinstance(data.get(key), list):
+                    data = data[key]
+                    break
+
         result: dict[tuple[int, int], Any] = {}
         for item in data or []:
-            if item.get("code") == 0:
-                result[(item["siid"], item["piid"])] = item.get("value")
+            if isinstance(item, str):
+                try:
+                    item = json.loads(item)
+                except (ValueError, TypeError):
+                    continue
+            if isinstance(item, dict) and item.get("code", 0) == 0 and "value" in item:
+                result[(item["siid"], item["piid"])] = item["value"]
         return result
 
     async def async_set_property(
