@@ -23,6 +23,56 @@ from .const import (
 )
 
 
+class DreameACOptionsFlow(config_entries.OptionsFlow):
+    """Options flow: change username / password."""
+
+    def __init__(self, config_entry) -> None:
+        self._entry = config_entry
+
+    async def async_step_init(self, user_input=None) -> FlowResult:
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            session = async_get_clientsession(self.hass)
+            cloud = DreameCloud(
+                session,
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+                self._entry.data[CONF_REGION],
+                DEFAULT_HOST_PREFIX,
+            )
+            try:
+                await cloud.async_login()
+            except DreameAuthError:
+                errors["base"] = "invalid_auth"
+            except Exception:  # noqa: BLE001
+                errors["base"] = "cannot_connect"
+            else:
+                self.hass.config_entries.async_update_entry(
+                    self._entry,
+                    data={
+                        **self._entry.data,
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
+                )
+                await self.hass.config_entries.async_reload(self._entry.entry_id)
+                return self.async_create_entry(title="", data={})
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME,
+                        default=self._entry.data.get(CONF_USERNAME, ""),
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+        )
+
+
 class DreameACConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Email + password login, then pick the air-conditioner."""
 
@@ -31,6 +81,10 @@ class DreameACConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         self._creds: dict[str, str] = {}
         self._acs: list[dict[str, Any]] = []
+
+    @staticmethod
+    def async_get_options_flow(config_entry):
+        return DreameACOptionsFlow(config_entry)
 
     async def async_step_user(self, user_input=None) -> FlowResult:
         errors: dict[str, str] = {}
@@ -90,6 +144,51 @@ class DreameACConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="select",
             data_schema=vol.Schema({vol.Required(CONF_DID): vol.In(choices)}),
+        )
+
+    async def async_step_reauth(self, entry_data: dict[str, Any]) -> FlowResult:
+        """Triggered automatically on ConfigEntryAuthFailed or via 'Reauthenticate'."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input=None) -> FlowResult:
+        errors: dict[str, str] = {}
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        if user_input is not None:
+            session = async_get_clientsession(self.hass)
+            cloud = DreameCloud(
+                session,
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+                entry.data[CONF_REGION],
+                DEFAULT_HOST_PREFIX,
+            )
+            try:
+                await cloud.async_login()
+            except DreameAuthError:
+                errors["base"] = "invalid_auth"
+            except Exception:  # noqa: BLE001
+                errors["base"] = "cannot_connect"
+            else:
+                self.hass.config_entries.async_update_entry(
+                    entry,
+                    data={
+                        **entry.data,
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
+                )
+                await self.hass.config_entries.async_reload(entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME, default=entry.data.get(CONF_USERNAME, "")): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
         )
 
     async def _create_for(self, dev: dict[str, Any]) -> FlowResult:

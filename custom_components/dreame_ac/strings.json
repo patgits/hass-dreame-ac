@@ -10,6 +10,14 @@
           "region": "Server-Region"
         }
       },
+      "reauth_confirm": {
+        "title": "Neu authentifizieren",
+        "description": "Die Anmeldung ist fehlgeschlagen. Bitte gib deine Dreame-Zugangsdaten erneut ein.",
+        "data": {
+          "username": "E-Mail",
+          "password": "Passwort"
+        }
+      },
       "select": {
         "title": "Klimaanlage auswählen",
         "description": "Im Konto wurden mehrere Klimaanlagen gefunden. Wähle die einzurichtende aus.",
@@ -24,7 +32,24 @@
       "no_aircon": "Im Konto wurde keine Klimaanlage gefunden."
     },
     "abort": {
-      "already_configured": "Diese Klimaanlage ist bereits eingerichtet."
+      "already_configured": "Diese Klimaanlage ist bereits eingerichtet.",
+      "reauth_successful": "Zugangsdaten erfolgreich aktualisiert."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Zugangsdaten ändern",
+        "description": "Gib deine neuen Dreame-Zugangsdaten ein. Die Integration wird danach neu geladen.",
+        "data": {
+          "username": "E-Mail",
+          "password": "Passwort"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Anmeldung fehlgeschlagen — E-Mail oder Passwort falsch.",
+      "cannot_connect": "Keine Verbindung zur Dreame-Cloud."
     }
   }
 }

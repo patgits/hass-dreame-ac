@@ -40,20 +40,27 @@ CONF_MODEL = "model"
 #   2.1  power           bool
 #   2.2  mode            1=cool  2=dry  4=fan
 #   2.3  target temp     int, °C * 10
+#   2.4  fan speed       2=low  7=high  (read + write, confirmed via live diff)
 #   3.5  night mode      bool
 #   4.2  swing/oscillate bool
 #   10.1 current temp    int, °C * 10  (read-only)
-# Fan SPEED is NOT exposed over the cloud RPC — device limitation.
-#   Verified empirically: across Low/High (via app AND remote) siid 2.4 stays
-#   constant at 2 and siid 8.1 stays constant at 0; no property tracks the
-#   fan-speed change, so it cannot be read or set over the cloud.
+# Note: an earlier pass wrongly concluded fan speed was not cloud-exposed (it
+# read 2.4 as constant 2). A broad siid/piid grid diff while toggling the app
+# fan stage showed 2.4 flips 2<->7; writing those values drives the unit.
 # ---------------------------------------------------------------------------
 PROP_POWER = (2, 1)
 PROP_MODE = (2, 2)
 PROP_TARGET_TEMP = (2, 3)
+PROP_FAN_SPEED = (2, 4)
 PROP_NIGHT = (3, 5)
 PROP_SWING = (4, 2)
 PROP_CURRENT_TEMP = (10, 1)
+
+# Fan stage <-> device value (this unit exposes two stages).
+FAN_LOW = "low"
+FAN_HIGH = "high"
+FAN_MODE_TO_VALUE = {FAN_LOW: 2, FAN_HIGH: 7}
+VALUE_TO_FAN_MODE = {2: FAN_LOW, 7: FAN_HIGH}
 
 TEMP_SCALE = 10
 MIN_TEMP = 16

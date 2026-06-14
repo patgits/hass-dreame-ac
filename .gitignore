@@ -5,3 +5,9 @@ __pycache__/
 .DS_Store
 .brands_upload/
 DreameAirConditioner.png
+
+# Local dev / reverse-engineering artifacts (not part of the integration)
+.venv/
+scan_props.py
+snap_*.json
+err.log

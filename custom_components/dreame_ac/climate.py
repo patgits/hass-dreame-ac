@@ -15,15 +15,20 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     CONF_MODEL,
     DOMAIN,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MODE_TO_VALUE,
     MAX_TEMP,
     MIN_TEMP,
     MODE_TO_HVAC,
     PROP_CURRENT_TEMP,
+    PROP_FAN_SPEED,
     PROP_MODE,
     PROP_POWER,
     PROP_SWING,
     PROP_TARGET_TEMP,
     TEMP_SCALE,
+    VALUE_TO_FAN_MODE,
 )
 from .coordinator import DreameACCoordinator
 
@@ -48,9 +53,11 @@ class DreameACClimate(CoordinatorEntity[DreameACCoordinator], ClimateEntity):
     _attr_max_temp = MAX_TEMP
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.DRY, HVACMode.FAN_ONLY]
     _attr_swing_modes = ["off", "on"]
+    _attr_fan_modes = [FAN_LOW, FAN_HIGH]
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.TURN_ON
         | ClimateEntityFeature.TURN_OFF
     )
@@ -62,7 +69,8 @@ class DreameACClimate(CoordinatorEntity[DreameACCoordinator], ClimateEntity):
             "identifiers": {(DOMAIN, entry.unique_id)},
             "name": entry.title,
             "manufacturer": "Dreame",
-            "model": entry.data.get(CONF_MODEL, "dreame.aircon.tbl2528"),
+            "model": "DREAME P-Wind10",
+            "model_id": entry.data.get(CONF_MODEL, "dreame.aircon.tbl2528"),
         }
 
     def _val(self, prop):
@@ -87,6 +95,10 @@ class DreameACClimate(CoordinatorEntity[DreameACCoordinator], ClimateEntity):
     @property
     def swing_mode(self):
         return "on" if self._val(PROP_SWING) else "off"
+
+    @property
+    def fan_mode(self):
+        return VALUE_TO_FAN_MODE.get(self._val(PROP_FAN_SPEED))
 
     async def _set(self, prop, value) -> None:
         await self.coordinator.cloud.async_set_property(
@@ -116,3 +128,7 @@ class DreameACClimate(CoordinatorEntity[DreameACCoordinator], ClimateEntity):
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         await self._set(PROP_SWING, swing_mode == "on")
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        if fan_mode in FAN_MODE_TO_VALUE:
+            await self._set(PROP_FAN_SPEED, FAN_MODE_TO_VALUE[fan_mode])
