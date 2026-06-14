@@ -40,16 +40,17 @@ password on your account first, then use those credentials here.
 - `climate` entity:
   - Power on/off
   - HVAC mode: **cool**, **dry**, **fan only** (cooling-only unit — no heat)
+  - **Fan mode: low / high** (2 stages)
   - Target temperature (16–31 °C)
   - Current temperature (read-only)
   - Swing / oscillation on/off
 - `switch` entity: **Nachtmodus** (night mode)
+- **Change credentials without re-adding:** update your Dreame e-mail/password
+  via the integration's **Configure** dialog. A re-authentication prompt also
+  appears automatically if the stored login stops working.
 - **Multiple air conditioners** on one account: if more than one is found during
   setup, you pick which to add; each becomes its own device and can be added
   separately.
-
-> **Note:** Fan speed is **not** exposed over the Dreame cloud RPC for this
-> model and is therefore not available.
 
 ## Installation via HACS
 
